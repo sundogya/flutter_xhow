@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,7 +20,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.grey,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -45,7 +47,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  var _postData = 'nihao';
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -55,6 +57,30 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }
+  Future _post() async {
+    var dio = new Dio();
+    dio.options.baseUrl = "https://www.itell.club/pub";
+    dio.options.connectTimeout = 5000; //5s
+    dio.options.receiveTimeout=5000;
+    dio.options.headers = {
+      'user-agent': 'dio',
+      'common-header': 'xx'
+    };
+    Response response = await dio.post("/check",
+      data: {
+        "id": 8,
+        "info": {
+          "name": "wendux",
+          "age": 25
+        }
+      },
+      // Send data with "application/x-www-form-urlencoded" format
+      options: new Options(
+          contentType: ContentType.parse("application/x-www-form-urlencoded")),
+    );
+    _postData = response.data;
+    return response;
   }
 
   @override
@@ -98,11 +124,14 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.display1,
             ),
+            Text(
+              '$_postData',
+            ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _post,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
