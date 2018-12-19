@@ -1,140 +1,142 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'tapbar.dart';
+import 'form.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.grey,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+    return new MaterialApp(
+      home: new MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  MyHomePage({Key key}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MyHomePageState createState() => new _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  var _postData = 'nihao';
-  void _incrementCounter() {
+  var _ipAddress = 'Unknown';
+  var _someThing = {};
+
+  _getIPAddress() async {
+    var url = 'https://httpbin.org/ip';
+    var httpClient = new HttpClient();
+
+    String result;
+    try {
+      var request = await httpClient.getUrl(Uri.parse(url));
+      var response = await request.close();
+      if (response.statusCode == HttpStatus.ok) {
+        var json = await response.transform(utf8.decoder).join();
+        var data = jsonDecode(json);
+        result = data['origin'];
+      } else {
+        result =
+        'Error getting IP address:\nHttp status ${response.statusCode}';
+      }
+    } catch (exception) {
+      result = 'Failed getting IP address';
+    }
+
+    // If the widget was removed from the tree while the message was in flight,
+    // we want to discard the reply rather than calling setState to update our
+    // non-existent appearance.
+    if (!mounted) return;
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _ipAddress = result;
     });
   }
-  Future _post() async {
-    var dio = new Dio();
-    dio.options.baseUrl = "https://www.itell.club/pub";
+  _getResponse() async{
+    Dio dio = new Dio(); // with default Options
+
+    // Set default configs
+    dio.options.baseUrl="https://www.itell.club/api";
     dio.options.connectTimeout = 5000; //5s
-    dio.options.receiveTimeout=5000;
-    dio.options.headers = {
-      'user-agent': 'dio',
-      'common-header': 'xx'
-    };
-    Response response = await dio.post("/check",
-      data: {
-        "id": 8,
-        "info": {
-          "name": "wendux",
-          "age": 25
-        }
+    dio.options.receiveTimeout=3000;
+    Response response;
+    var result;
+    response = await dio.request(
+      "/getExpressInfo",
+      data:{
+        "comCode":"JD",
+        "expressNum":"83270675077",
       },
-      // Send data with "application/x-www-form-urlencoded" format
-      options: new Options(
-          contentType: ContentType.parse("application/x-www-form-urlencoded")),
+      options:new Options(
+        method: "POST",
+        contentType: ContentType.parse("application/json")
+      )
     );
-    _postData = response.data;
-    return response;
+    if (response.statusCode == HttpStatus.ok) {
+        var temp = json.decode(response.data);
+        if(temp["errorCode"] == 0){
+            result = temp["body"];
+        }else{
+          result = temp["msg"];
+        }
+    } else {
+      result =
+      'Error getting express info :\nHttp status ${response.statusCode}';
+    }
+    if (!mounted) return;
+    print(result["Traces"]);
+    setState(() {
+      _someThing = result;
+    });
+  }
+  void _toTapBar(){
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TabbedAppBarSample()),
+    );
+  }
+  void _toForm(){
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MyForm()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
+    var spacer = new SizedBox(height: 32.0);
+    return new Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('Http Test'),
+        actions: <Widget>[
+          new IconButton(icon: const Icon(Icons.airplay), onPressed: _toTapBar)
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
+      body: new Center(
+        child: new Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            new Text('Your current IP address is:'),
+            new Text('$_ipAddress.'),
+            new Text('Some response is:'),
+            new Text('$_someThing.'),
+            spacer,
+            new RaisedButton(
+              onPressed: _getIPAddress,
+              child: new Text('Get IP address')
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            new RaisedButton(
+                onPressed: _getResponse,
+                child: new Text('Get something')
             ),
-            Text(
-              '$_postData',
-            ),
+            new IconButton(icon: const Icon(Icons.assignment), onPressed: _toForm),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _post,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
