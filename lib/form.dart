@@ -27,9 +27,8 @@ class MyCustomForm extends StatefulWidget {
   }
 }
 class _LoginData {
-  String phone = '';
-  String name = '';
-  String password = '';
+  String comCode = '';
+  String expressNum = '';
 }
 // Create a corresponding State class. This class will hold the data related to
 // the form.
@@ -51,51 +50,35 @@ class MyCustomFormState extends State<MyCustomForm> {
           TextFormField(
             decoration: const InputDecoration(
               icon: Icon(Icons.phone_android),
-              hintText: 'What is you phone number?',
-              labelText: 'Phone *',
+              hintText: 'What is the com code?',
+              labelText: 'comCode *',
             ),
             onSaved: (String value) {
-              this._data.phone = value;
+              this._data.comCode = value;
               // This optional block of code can be used to run
               // code when the user saves the form.
             },
             validator: (String value) {
               return value.contains('@') ? 'Do not use the @ char.' : null;
             },
-            keyboardType: TextInputType.phone,
           ),
           TextFormField(
             decoration: const InputDecoration(
-              icon: Icon(Icons.person),
-              hintText: 'What do people call you?',
-              labelText: 'Name *',
+              icon: Icon(Icons.blur_on),
+              hintText: 'What is the express number',
+              labelText: 'Number *',
             ),
             onSaved: (String value) {
-              this._data.name = value;
+              this._data.expressNum = value;
               // This optional block of code can be used to run
               // code when the user saves the form.
             },
+            keyboardType: TextInputType.number,
             validator: (value) {
               if (value.isEmpty) {
-                return 'Please enter your name';
+                return 'Please enter express number';
               }
             },
-          ),
-          TextFormField(
-            decoration: const InputDecoration(
-              icon: Icon(Icons.vpn_key),
-              hintText: 'What is your password?',
-              labelText: 'Password *',
-            ),
-            onSaved: (String value){
-              this._data.password = value;
-            },
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter your password';
-              }
-            },
-            obscureText: true,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -109,9 +92,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                       .showSnackBar(SnackBar(content: Text('Processing Data')));
                   _formKey.currentState.save();
                   print('Printing the login data.');
-                  print('Phone: ${_data.phone}');
-                  print('Name: ${_data.name}');
-                  print('Password: ${_data.password}');
+                  print('Phone: ${_data.comCode}');
+                  print('Name: ${_data.expressNum}');
                 }
               },
               child: Text('Submit'),
