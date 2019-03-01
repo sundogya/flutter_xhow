@@ -1,39 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-Future<Post> fetchPost() async {
-  final response =
-  await http.get('https://jsonplaceholder.typicode.com/posts/1');
+import './dataStruct.dart';
+
+Future<Post> fetchPost(String url) async {
+  final response = await http.get(url);
 
   if (response.statusCode == 200) {
     // If the call to the server was successful, parse the JSON
     return Post.fromJson(json.decode(response.body));
   } else {
     // If that call was not successful, throw an error.
-    throw Exception('Failed to load post');
+    throw Exception('Failed to get express info');
   }
 }
 
-class Post {
-  final int userId;
-  final int id;
-  final String title;
-  final String body;
 
-  Post({this.userId, this.id, this.title, this.body});
-
-  factory Post.fromJson(Map<String, dynamic> json) {
-    return Post(
-      userId: json['userId'],
-      id: json['id'],
-      title: json['title'],
-      body: json['body'],
-    );
-  }
-}
 
 class postExample extends StatelessWidget {
   final Future<Post> post;
@@ -42,25 +26,37 @@ class postExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text('Fetch Data Example'),
-        ),
-        body: Center(
-          child: FutureBuilder<Post>(
-            future: post,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data.title);
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
-
-              // By default, show a loading spinner
-              return CircularProgressIndicator();
-            },
-          ),
-        ),
-      );
+    return Center(
+        child: Container(
+      width: 1000.0,
+      height: 1000.0,
+      margin: EdgeInsets.all(0.0),
+      padding: EdgeInsets.all(10.0),
+      child: FutureBuilder<Post>(
+        future: post,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data.body.Traces.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Text(
+                  '${snapshot.data.body.Traces[index].AcceptStation}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.deepOrange,
+                    textBaseline: TextBaseline.alphabetic,
+                    fontSize: 16.0,
+                  ),
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          // By default, show a loading spinner
+          return CircularProgressIndicator();
+        },
+      ),
+    ));
   }
 }
